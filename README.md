@@ -34,7 +34,20 @@ vaultsweep scan . --format json --fail-on high
 
 # List rules
 vaultsweep rules
+
+# Install local git pre-commit hook
+vaultsweep install-hook --fail-on critical
+
+# Generate a .vaultsweep-baseline file for incremental adoption
+vaultsweep baseline . --output .vaultsweep-baseline
 ```
+
+## Pre-commit Hook, Baseline & GitHub Action (Phase 2)
+
+- **Pre-commit Hook**: Run `vaultsweep install-hook` to install `.git/hooks/pre-commit` blocking commits with critical/high findings locally.
+- **GitHub Action**: Add `BreachDirect/vaultsweep@main` (see [`action/README.md`](action/README.md)) to fail pull requests on `--fail-on high`.
+- **Baseline (`.vaultsweep-baseline`)**: Suppress legacy findings while gating new leaks.
+- **Inline Ignore**: Append `# vaultsweep:ignore` (or `// vaultsweep:ignore STELLAR-001`) to suppress intentional test vectors on a line.
 
 ## Built-in Rules (Phase 1)
 

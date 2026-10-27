@@ -1,0 +1,60 @@
+name: "VaultSweep Secret Scanner"
+description: "Stellar-aware secrets scanner for repositories and pull requests (BreachDirect / Stellar Wave)"
+author: "BreachDirect"
+
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  target:
+    description: "Directory or file path to scan"
+    required: false
+    default: "."
+  fail-on:
+    description: "Exit non-zero if findings at or above this severity (critical, high, medium, low)"
+    required: false
+    default: "high"
+  format:
+    description: "Output format (text or json)"
+    required: false
+    default: "text"
+  baseline:
+    description: "Optional path to a .vaultsweep-baseline file for incremental adoption"
+    required: false
+    default: ""
+  python-version:
+    description: "Python version to run VaultSweep with"
+    required: false
+    default: "3.12"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install VaultSweep
+      shell: bash
+      run: |
+        python3 -m pip install --upgrade pip
+        python3 -m pip install "${{ github.action_path }}"
+
+    - name: Run VaultSweep Scan
+      shell: bash
+      env:
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_FORMAT: ${{ inputs.format }}
+        INPUT_BASELINE: ${{ inputs.baseline }}
+      run: |
+        args=("scan" "$INPUT_TARGET" "--format" "$INPUT_FORMAT")
+        if [ -n "$INPUT_FAIL_ON" ]; then
+          args+=("--fail-on" "$INPUT_FAIL_ON")
+        fi
+        if [ -n "$INPUT_BASELINE" ]; then
+          args+=("--baseline" "$INPUT_BASELINE")
+        fi
+        vaultsweep "${args[@]}"
