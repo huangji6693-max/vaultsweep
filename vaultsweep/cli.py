@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
 
     scan = sub.add_parser("scan", help="Scan a file or directory for secrets")
-    scan.add_argument("target", help="Path to scan")
+    scan.add_argument("target", nargs="?", default=".", help="Path to scan (default: .)")
     scan.add_argument(
         "--format", choices=["text", "json"], default="text", help="Output format"
     )
@@ -30,6 +30,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Exit 1 if findings at or above this severity (for CI)",
     )
+    scan.add_argument(
+        "--staged",
+        action="store_true",
+        help="Scan only added/modified lines in the git staging index",
+    )
+    scan.add_argument(
+        "--diff",
+        default=None,
+        metavar="BRANCH",
+        help="Scan only added/modified lines compared to BRANCH (e.g. --diff main)",
+    )
 
     sub.add_parser("rules", help="List all detection rules")
     return p
@@ -37,8 +48,12 @@ def build_parser() -> argparse.ArgumentParser:
 
 def cmd_scan(args: argparse.Namespace) -> int:
     try:
-        report = scan_path(args.target)
-    except FileNotFoundError as exc:
+        report = scan_path(
+            args.target,
+            staged=args.staged,
+            diff_ref=args.diff,
+        )
+    except (FileNotFoundError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 

@@ -32,6 +32,12 @@ vaultsweep scan ./my-repo
 # JSON for CI
 vaultsweep scan . --format json --fail-on high
 
+# Scan only git staged additions/modifications
+vaultsweep scan . --staged --fail-on high
+
+# Scan changed lines compared to main branch in CI pull requests
+vaultsweep scan . --diff main --fail-on high
+
 # List rules
 vaultsweep rules
 ```
