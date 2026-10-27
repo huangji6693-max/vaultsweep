@@ -30,14 +30,23 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Exit 1 if findings at or above this severity (for CI)",
     )
+    scan.add_argument(
+        "--only",
+        default=None,
+        help="Comma-separated rule IDs to run (e.g. STELLAR-001,MNEMONIC-001)",
+    )
 
     sub.add_parser("rules", help="List all detection rules")
     return p
 
 
 def cmd_scan(args: argparse.Namespace) -> int:
+    only_rules: set[str] | None = None
+    if args.only:
+        only_rules = {token.strip() for token in args.only.split(",") if token.strip()}
+
     try:
-        report = scan_path(args.target)
+        report = scan_path(args.target, only_rules=only_rules)
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
